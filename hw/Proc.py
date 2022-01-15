@@ -42,12 +42,10 @@ class Proc:
         self.ram[target]= not (bit1 and bit2)
 
     def __copyTwoBytes(self, source, target):
-        byte1 = self.ram.getByte(source)
-        byte2 = self.ram.getByte(source+1)
+        bytes = self.ram.getBytes(source, 2)
         if self.debug > 1:
             print(f" copy: source: {source}, target: {target}")
-        self.ram.setByte(target,byte1)
-        self.ram.setByte(target + 1, byte2)
+        self.ram.setBytes(target, bytes, 2)
     def __str__(self):
         return f"PC: {self.ram.getPC()}\n RAM: \n {self.ram}"
     @property
