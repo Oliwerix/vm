@@ -22,28 +22,31 @@ class RAM:
         else:
             self.ram &= ~(1 << bit_number)
 
-    def getByte(self, byte) -> int:
-        return (self.ram & (0xff << (byte * 8))) >> (byte * 8)
-    def setByte(self, byte_number, byte) -> None:
+    def getBytes(self, byte, how_many=1) -> int:
+        "Gets bytes begining with byte"
+        return (self.ram & ((2**(8*how_many)-1) << (byte * 8 * how_many))) >> (byte * 8 * how_many)
+    def setBytes(self, byte_number, bytes, how_many=1) -> None:
         # najprej rabmo clearat byte, pol sele lahko nastaumo
-        self.ram &= ~(0xff << byte_number*8)
-        self.ram |= (byte << byte_number*8)
-    def getPC(self)->int:
-        return self.getByte(1)*256 + self.getByte(0)
+        self.ram &= ~((2**(8*how_many)-1) << byte_number * 8 * how_many)
+        self.ram |= (bytes << byte_number*8*how_many)
+    def getPC(self) -> int:
+        "Gets the program counter"
+        return self.getBytes(0,2)
 
     def incPC(self) -> int:
-        PC = self.getPC()
-        PC = (PC + 1) % (256*255)
-        self.setByte(1, PC >> 8)
-        self.setByte(0, PC % 256)
+        "Increments the program counter"
+        pc = self.getPC()
+        pc = (pc + 1) % (256*256)
+        self.setBytes(0, pc, 2)
         # tuki returnamo bl k ne za debug purposes
-        return PC
+        return pc
         
     def __str__(self):
         out = ""
         i = 0
         while i < RAM_SIZE / 8:
-            out += "{0:#0{1}x}".format(self.getByte(i+1)*256 + self.getByte(i), 6) + '\n'
+            out += "{0:#0{1}x}".format(self.getBytes(i), 4) +' '
+            out += "{0:#0{1}x}".format(self.getBytes(i+1), 4) + '\n'
             i += 2
         return out
 
@@ -53,6 +56,10 @@ if __name__ == "__main__":
     # ram.setByte(3, 0xff)
     print(ram.ram)
 
-    ram[1] = True
-    print(ram)
-    print(ram.ram)
+    ram.setBytes(0, 0xffff, 2)
+    print(hex(ram.getPC()))
+    ram.incPC()
+    print()
+    print(hex(ram.getPC()))
+
+    # print(ram.ram)
