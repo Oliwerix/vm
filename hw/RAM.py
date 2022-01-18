@@ -1,8 +1,19 @@
 RAM_SIZE = 128
-
+STDIO = 0x10
+STDIO_SIZE = 4
 class RAM:
     def __init__(self) -> None:
-        self.ram = 0
+        self.__ram = 0
+    @property
+    def ram(self):
+        self.__ram &= ~((2**(STDIO_SIZE)-1) << STDIO_SIZE * STDIO)
+        self.__ram |= (self.stdio.stdio << STDIO_SIZE * STDIO)
+        return self.__ram
+    @ram.setter
+    def ram(self, value):
+        self.stdio.stdio = self.__ram & ((2**(STDIO)-1) << (STDIO_SIZE * STDIO)) >> (STDIO_SIZE)
+        self.__ram = value
+
     def __iter__(self):
         self.__iterator = 0
         return self
@@ -21,13 +32,14 @@ class RAM:
             self.ram |= (1 << bit_number)
         else:
             self.ram &= ~(1 << bit_number)
-
+    def loadStdio(self, what):
+        self.stdio = what
     def getBytes(self, byte, how_many=1) -> int:
         "Gets bytes begining with byte"
         return (self.ram & ((2**(8*how_many)-1) << (byte * 8 * how_many))) >> (byte * 8 * how_many)
     def setBytes(self, byte_number, bytes, how_many=1) -> None:
         # najprej rabmo clearat byte, pol sele lahko nastaumo
-        self.ram &= ~((2**(8*how_many)-1) << byte_number * 8 * how_many)
+        self.ram &= ~((2 ** (8 * how_many) - 1) << byte_number * 8 * how_many)
         self.ram |= (bytes << byte_number*8*how_many)
     def getPC(self) -> int:
         "Gets the program counter"
@@ -52,7 +64,9 @@ class RAM:
 
     
 if __name__ == "__main__":
+    from hw.TelnetStdio import TelnetStdio
     ram = RAM() 
+    ram.loadStdio(TelnetStdio())
     # ram.setByte(3, 0xff)
     print(ram.ram)
 
